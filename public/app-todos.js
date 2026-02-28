@@ -5,7 +5,8 @@ tg.expand();
 
 // 配置
 const GATEWAY_URL = 'http://127.0.0.1:18688'; // OpenClaw Gateway 地址
-const REFRESH_INTERVAL = 10000; // 10 秒刷新一次
+const REFRESH_INTERVAL = 3000; // 3 秒刷新一次（实时）
+const WEBSOCKET_URL = 'ws://127.0.0.1:18688'; // WebSocket 实时连接
 
 // 加载任务列表（Todo）
 async function loadTodos() {
@@ -160,8 +161,39 @@ function setupTheme() {
 setupTheme();
 loadTodos();
 
-// 定时刷新
+// 定时刷新（3 秒）
 setInterval(loadTodos, REFRESH_INTERVAL);
+
+// WebSocket 实时更新（如果 Gateway 支持）
+function connectWebSocket() {
+  try {
+    const ws = new WebSocket(WEBSOCKET_URL);
+    ws.onopen = () => {
+      console.log('[WebSocket] Connected');
+      // Subscribe to todo changes
+      ws.send(JSON.stringify({ type: 'subscribe', channel: 'todos' }));
+    };
+    ws.onmessage = (event) => {
+      console.log('[WebSocket] Update received:', event.data);
+      const data = JSON.parse(event.data);
+      if (data.type === 'todo_change') {
+        loadTodos(); // Real-time update
+      }
+    };
+    ws.onerror = (error) => {
+      console.warn('[WebSocket] Error:', error);
+    };
+    ws.onclose = () => {
+      console.log('[WebSocket] Disconnected, reconnecting in 5s...');
+      setTimeout(connectWebSocket, 5000);
+    };
+  } catch (e) {
+    console.warn('[WebSocket] Failed to connect:', e.message);
+  }
+}
+
+// Try WebSocket connection
+connectWebSocket();
 
 // 告诉 Telegram 主按钮可以点击
 tg.MainButton.setText('刷新');
