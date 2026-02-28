@@ -1,0 +1,11 @@
+{
+  "name": "openclaw-telegram-miniapp",
+  "version": "1.0.0",
+  "description": "Telegram Mini App for monitoring OpenClaw tasks",
+  "scripts": {
+    "deploy": "vercel --prod"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+}
