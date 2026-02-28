@@ -11,8 +11,8 @@ const WEBSOCKET_URL = 'ws://127.0.0.1:18688'; // WebSocket 实时连接
 // 加载任务列表（Todo）
 async function loadTodos() {
   try {
-    // 从本地文件获取（由 OpenClaw 自动同步）
-    const response = await fetch('todos.json');
+    // 从本地文件获取（添加时间戳防止缓存）
+    const response = await fetch('todos.json?t=' + Date.now());
     if (response.ok) {
       const data = await response.json();
       renderTodos(data.todos || []);
