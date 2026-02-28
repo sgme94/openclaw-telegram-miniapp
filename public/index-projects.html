@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目状态管理 - OpenClaw</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--tg-theme-bg-color, #ffffff);
+      color: var(--tg-theme-text-color, #000000);
+      padding: 16px;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+    }
+    
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .refresh-btn {
+      background: var(--tg-theme-button-color, #3390ec);
+      color: var(--tg-theme-button-text-color, #ffffff);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .stats {
+      background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--tg-theme-button-color, #3390ec);
+    }
+    
+    .stat-label {
+      font-size: 11px;
+      color: var(--tg-theme-hint-color, #999999);
+      margin-top: 4px;
+    }
+    
+    .section {
+      margin-bottom: 24px;
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .projects-list, .events-list, .blockers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .project-card {
+      background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+      padding: 16px;
+      border-radius: 12px;
+      border-left: 4px solid var(--tg-theme-button-color, #3390ec);
+    }
+    
+    .project-card.blocked {
+      border-left-color: #FF5722;
+    }
+    
+    .project-card.completed {
+      border-left-color: #4CAF50;
+      opacity: 0.7;
+    }
+    
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .project-name {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    
+    .project-status {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .project-status.active {
+      background: #2196F3;
+      color: white;
+    }
+    
+    .project-status.blocked {
+      background: #FF5722;
+      color: white;
+    }
+    
+    .project-status.completed {
+      background: #4CAF50;
+      color: white;
+    }
+    
+    .project-phase {
+      font-size: 13px;
+      color: var(--tg-theme-hint-color, #999999);
+      margin-bottom: 8px;
+    }
+    
+    .project-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--tg-theme-hint-color, #999999);
+    }
+    
+    .event-card {
+      background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+      padding: 12px;
+      border-radius: 8px;
+      border-left: 3px solid #9E9E9E;
+    }
+    
+    .event-card.progress {
+      border-left-color: #2196F3;
+    }
+    
+    .event-card.blocker {
+      border-left-color: #FF5722;
+    }
+    
+    .event-card.decision {
+      border-left-color: #9C27B0;
+    }
+    
+    .event-type {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--tg-theme-hint-color, #999999);
+      margin-bottom: 4px;
+    }
+    
+    .event-description {
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+    
+    .event-time {
+      font-size: 11px;
+      color: var(--tg-theme-hint-color, #999999);
+    }
+    
+    .blocker-card {
+      background: #FFEBEE;
+      padding: 12px;
+      border-radius: 8px;
+      border-left: 3px solid #FF5722;
+    }
+    
+    .blocker-text {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    .blocker-project {
+      font-size: 11px;
+      color: #D32F2F;
+      margin-top: 4px;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--tg-theme-hint-color, #999999);
+    }
+    
+    .error {
+      background: #FFEBEE;
+      color: #D32F2F;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--tg-theme-button-color, #3390ec);
+      color: white;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 项目状态管理</h1>
+    <button class="refresh-btn" onclick="loadDashboard()">刷新</button>
+  </div>
+  
+  <div id="error-container"></div>
+  
+  <div class="stats">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 14px; font-weight: 600;">项目总览</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value" id="total-projects">-</div>
+        <div class="stat-label">总项目</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="active-projects">-</div>
+        <div class="stat-label">进行中</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="recent-events">-</div>
+        <div class="stat-label">最近事件</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="open-blockers">-</div>
+        <div class="stat-label">阻塞问题</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">
+      <span>📁 项目列表</span>
+    </div>
+    <div class="projects-list" id="projects-list">
+      <div class="loading">加载中...</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">
+      <span>📝 最近事件</span>
+    </div>
+    <div class="events-list" id="events-list">
+      <div class="loading">加载中...</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">
+      <span>⚠️ 阻塞问题</span>
+    </div>
+    <div class="blockers-list" id="blockers-list">
+      <div class="loading">加载中...</div>
+    </div>
+  </div>
+  
+  <button class="fab" onclick="logEvent()" title="记录事件">+</button>
+  
+  <script src="app-project-state.js"></script>
+</body>
+</html>
