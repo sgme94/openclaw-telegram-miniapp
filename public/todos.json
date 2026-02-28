@@ -1,0 +1,22 @@
+{
+  "todos": [
+    {
+      "id": "todo-1",
+      "content": "调研 Telegram Mini App",
+      "status": "completed",
+      "priority": "high"
+    },
+    {
+      "id": "todo-2",
+      "content": "配置小麦 Mac",
+      "status": "pending",
+      "priority": "high"
+    },
+    {
+      "id": "todo-3",
+      "content": "安装 Docker",
+      "status": "in_progress",
+      "priority": "medium"
+    }
+  ]
+}
