@@ -15,8 +15,14 @@ tg.expand();
 
 // 配置
 const CONFIG = {
-    // API 地址（优先使用本地同步服务）
-    API_URL: process.env.API_URL || 'http://localhost:3001',
+    // API 地址 - 自动检测环境
+    // Vercel 环境：使用当前域名
+    // 本地环境：使用 localhost
+    API_URL: window.location.origin === 'null' || 
+             window.location.hostname === 'localhost' ||
+             window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3001'
+        : window.location.origin,
     
     // 刷新间隔
     REFRESH_INTERVAL: 30000, // 30 秒

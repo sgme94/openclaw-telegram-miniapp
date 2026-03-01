@@ -1,5 +1,32 @@
 {
-  "framework": null,
-  "outputDirectory": "public",
-  "installCommand": "echo 'No install needed'"
+  "version": 2,
+  "name": "openclaw-telegram-miniapp",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "public"
+      }
+    },
+    {
+      "src": "api/sync-project-state.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/sync-project-state.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ],
+  "env": {
+    "PROJECT_STATE_API": "@project_state_api",
+    "REFRESH_INTERVAL": "30000"
+  },
+  "outputDirectory": "public"
 }

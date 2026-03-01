@@ -1,11 +1,33 @@
 {
   "name": "openclaw-telegram-miniapp",
-  "version": "1.0.0",
-  "description": "Telegram Mini App for monitoring OpenClaw tasks",
+  "version": "1.1.0",
+  "description": "Telegram Mini App for monitoring OpenClaw tasks with real-time project state",
+  "main": "api/index.js",
   "scripts": {
-    "deploy": "vercel --prod"
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
+    "sync": "node api/sync-project-state.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.0.0"
   },
   "devDependencies": {
     "vercel": "^32.0.0"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sgme94/openclaw-telegram-miniapp.git"
+  },
+  "keywords": [
+    "telegram",
+    "miniapp",
+    "openclaw",
+    "task-management",
+    "project-state"
+  ],
+  "author": "OpenClaw",
+  "license": "MIT"
 }
