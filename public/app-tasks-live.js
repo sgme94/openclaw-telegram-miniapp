@@ -18,11 +18,13 @@ const CONFIG = {
     // API 地址 - 自动检测环境
     // Vercel 环境：使用当前域名
     // 本地环境：使用 localhost
-    API_URL: window.location.origin === 'null' || 
-             window.location.hostname === 'localhost' ||
-             window.location.hostname === '127.0.0.1'
+    API_URL: (typeof window !== 'undefined' && (
+        window.location.origin === 'null' || 
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1'
+    ))
         ? 'http://localhost:3001'
-        : window.location.origin,
+        : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001'),
     
     // 刷新间隔
     REFRESH_INTERVAL: 30000, // 30 秒
