@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "openclaw-telegram-miniapp",
   "builds": [
     {
       "src": "package.json",
@@ -10,14 +9,14 @@
       }
     },
     {
-      "src": "api/sync-project-state.js",
+      "src": "api/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/sync-project-state.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/(.*)",
@@ -25,7 +24,7 @@
     }
   ],
   "env": {
-    "PROJECT_STATE_API": "@project_state_api",
+    "PROJECT_STATE_API": "http://localhost:3000",
     "REFRESH_INTERVAL": "30000"
   },
   "outputDirectory": "public"
