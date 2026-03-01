@@ -8,9 +8,6 @@
     "deploy": "vercel --prod",
     "sync": "node api/sync-project-state.js"
   },
-  "dependencies": {
-    "better-sqlite3": "^9.0.0"
-  },
   "devDependencies": {
     "vercel": "^32.0.0"
   },
