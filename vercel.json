@@ -2,11 +2,8 @@
   "version": 2,
   "builds": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "public"
-      }
+      "src": "public/**",
+      "use": "@vercel/static"
     },
     {
       "src": "api/index.js",
@@ -26,6 +23,5 @@
   "env": {
     "PROJECT_STATE_API": "http://localhost:3000",
     "REFRESH_INTERVAL": "30000"
-  },
-  "outputDirectory": "public"
+  }
 }
