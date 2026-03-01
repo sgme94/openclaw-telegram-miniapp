@@ -183,10 +183,11 @@ tg.ready();
 tg.expand();
 
 const CONFIG = {
-    API_URL: (typeof window !== 'undefined' && (window.location.origin === 'null' || window.location.hostname === 'localhost')) ? 'http://localhost:3001' : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001'),
+    API_URL: window.location.origin,
     REFRESH_INTERVAL: 30000,
     AUTO_REFRESH: true
 };
+console.log('[Init] API_URL:', CONFIG.API_URL);
 
 let state = { tasks: [], stats: null, filter: 'all', lastUpdate: null, loading: false };
 
@@ -195,16 +196,23 @@ async function fetchData() {
     state.loading = true;
     updateRefreshButton(true);
     try {
-        const response = await fetch(`${CONFIG.API_URL}/api/dashboard`);
+        console.log('[Fetch] Requesting:', `${CONFIG.API_URL}/api/dashboard`);
+        const response = await fetch(`${CONFIG.API_URL}/api/dashboard`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-cache'
+        });
+        console.log('[Fetch] Response:', response.status);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
+        console.log('[Fetch] Data:', data);
         state.tasks = data.recentTasks || [];
         state.stats = data.stats;
         state.lastUpdate = data.lastUpdate;
         render();
     } catch (error) {
         console.error('[Fetch] Error:', error);
-        document.getElementById('content').innerHTML = `<div class="loading">加载失败：${error.message}<br><small>请确保后端服务已启动</small></div>`;
+        document.getElementById('content').innerHTML = `<div class="loading" style="color:red;">加载失败：${error.message}<br><small>API: ${CONFIG.API_URL}/api/dashboard</small></div>`;
     } finally {
         state.loading = false;
         updateRefreshButton(false);
