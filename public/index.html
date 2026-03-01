@@ -2,66 +2,276 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenClaw Mini App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OpenClaw 任务看板</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            padding: 20px;
             background: var(--tg-theme-bg-color, #ffffff);
             color: var(--tg-theme-text-color, #000000);
-        }
-        .menu {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
-        }
-        .menu-item {
-            display: block;
             padding: 16px;
+            padding-bottom: 80px;
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            background: var(--tg-theme-bg-color, #ffffff);
+            padding: 16px 0;
+            border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        .stat-card {
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--tg-theme-button-color, #3390ec);
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--tg-theme-hint-color, #999999);
+            margin-top: 4px;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        .filter-btn {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--tg-theme-button-color, #3390ec);
+            background: transparent;
+            color: var(--tg-theme-button-color, #3390ec);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .filter-btn.active {
             background: var(--tg-theme-button-color, #3390ec);
             color: var(--tg-theme-button-text-color, #ffffff);
-            text-decoration: none;
+        }
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .task-card {
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
             border-radius: 12px;
-            text-align: center;
-            font-weight: 500;
-            transition: opacity 0.2s;
+            padding: 16px;
         }
-        .menu-item:hover {
-            opacity: 0.9;
-        }
-        h1 {
-            font-size: 24px;
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             margin-bottom: 8px;
         }
-        .subtitle {
+        .task-content {
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .task-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
             color: var(--tg-theme-hint-color, #999999);
-            font-size: 14px;
+        }
+        .task-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-pending { background: #e5e7eb; color: #6b7280; }
+        .status-in_progress { background: #fef3c7; color: #92400e; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .priority-badge {
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+        }
+        .priority-high { background: #fee2e2; color: #991b1b; }
+        .priority-medium { background: #fef3c7; color: #92400e; }
+        .priority-low { background: #e0e7ff; color: #3730a3; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+        .refresh-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 200;
+        }
+        .refresh-btn.spinning { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .last-update {
+            text-align: center;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+            margin-top: 24px;
         }
     </style>
 </head>
 <body>
-    <h1>🤖 OpenClaw Mini App</h1>
-    <p class="subtitle">选择功能</p>
-    
-    <div class="menu">
-        <a href="index-tasks.html" class="menu-item">
-            📋 任务看板 (实时)
-        </a>
-        <a href="index-projects.html" class="menu-item">
-            📊 项目状态
-        </a>
-        <a href="index-todos.html" class="menu-item">
-            ✅ 待办事项
-        </a>
+    <div class="header">
+        <h1>📋 任务看板</h1>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total">-</div>
+                <div class="stat-label">总任务</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-completed">-</div>
+                <div class="stat-label">已完成</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-progress">-</div>
+                <div class="stat-label">进行中</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-pending">-</div>
+                <div class="stat-label">待处理</div>
+            </div>
+        </div>
     </div>
     
+    <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">全部</button>
+        <button class="filter-btn" data-filter="pending">待处理</button>
+        <button class="filter-btn" data-filter="in_progress">进行中</button>
+        <button class="filter-btn" data-filter="completed">已完成</button>
+    </div>
+    
+    <div id="content"><div class="loading">加载中...</div></div>
+    <div class="last-update" id="last-update"></div>
+    <button class="refresh-btn" id="refresh-btn">🔄</button>
+    
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+const CONFIG = {
+    API_URL: window.location.origin === 'null' || window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin,
+    REFRESH_INTERVAL: 30000,
+    AUTO_REFRESH: true
+};
+
+let state = { tasks: [], stats: null, filter: 'all', lastUpdate: null, loading: false };
+
+async function fetchData() {
+    if (state.loading) return;
+    state.loading = true;
+    updateRefreshButton(true);
+    try {
+        const response = await fetch(`${CONFIG.API_URL}/api/dashboard`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        state.tasks = data.recentTasks || [];
+        state.stats = data.stats;
+        state.lastUpdate = data.lastUpdate;
+        render();
+    } catch (error) {
+        console.error('[Fetch] Error:', error);
+        document.getElementById('content').innerHTML = `<div class="loading">加载失败：${error.message}<br><small>请确保后端服务已启动</small></div>`;
+    } finally {
+        state.loading = false;
+        updateRefreshButton(false);
+    }
+}
+
+function render() {
+    if (!state.stats) return;
+    const { tasks } = state.stats;
+    document.getElementById('stat-total').textContent = tasks?.total || 0;
+    document.getElementById('stat-completed').textContent = tasks?.completed || 0;
+    document.getElementById('stat-progress').textContent = tasks?.in_progress || 0;
+    document.getElementById('stat-pending').textContent = tasks?.pending || 0;
+    
+    const content = document.getElementById('content');
+    const filteredTasks = state.filter === 'all' ? state.tasks : state.tasks.filter(t => t.status === state.filter);
+    
+    if (filteredTasks.length === 0) {
+        content.innerHTML = '<div class="loading">暂无任务</div>';
+    } else {
+        content.innerHTML = `<div class="task-list">${filteredTasks.map(task => `
+            <div class="task-card">
+                <div class="task-header">
+                    <span class="task-status status-${task.status}">${getStatusText(task.status)}</span>
+                    <span class="priority-badge priority-${task.priority}">${getPriorityText(task.priority)}</span>
+                </div>
+                <div class="task-content">${escapeHtml(task.content)}</div>
+                <div class="task-meta">
+                    <span>📅 ${getTimeAgo(new Date(task.created_at))}</span>
+                    ${task.project_name ? `<span>📁 ${escapeHtml(task.project_name)}</span>` : ''}
+                </div>
+            </div>
+        `).join('')}</div>`;
+    }
+    
+    if (state.lastUpdate) {
+        document.getElementById('last-update').textContent = `最后更新：${new Date(state.lastUpdate).toLocaleTimeString('zh-CN')}`;
+    }
+}
+
+function getStatusText(s) { return {pending:'待处理',in_progress:'进行中',completed:'已完成'}[s]||s; }
+function getPriorityText(p) { return {high:'高',medium:'中',low:'低'}[p]||p; }
+function getTimeAgo(date) {
+    const diff = Date.now() - date;
+    if (diff < 60000) return '刚刚';
+    if (diff < 3600000) return `${Math.floor(diff/60000)}分钟前`;
+    if (diff < 86400000) return `${Math.floor(diff/3600000)}小时前`;
+    return date.toLocaleDateString('zh-CN');
+}
+function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+function updateRefreshButton(spinning) { document.getElementById('refresh-btn').classList.toggle('spinning', spinning); }
+
+document.getElementById('filter-bar').addEventListener('click', (e) => {
+    if (e.target.classList.contains('filter-btn')) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === e.target.dataset.filter));
+        state.filter = e.target.dataset.filter;
+        render();
+    }
+});
+
+document.getElementById('refresh-btn').addEventListener('click', fetchData);
+fetchData();
+if (CONFIG.AUTO_REFRESH) setInterval(fetchData, CONFIG.REFRESH_INTERVAL);
+
+tg.MainButton.setText('关闭');
+tg.MainButton.onClick(() => tg.close());
+tg.MainButton.show();
     </script>
 </body>
 </html>
