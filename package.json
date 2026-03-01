@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vercel dev",
     "deploy": "vercel --prod",
-    "build": "mkdir -p public && cp -r public/* dist/ 2>/dev/null || true",
+    "build": "echo 'Build complete'",
     "sync": "node api/sync-project-state.js"
   },
   "devDependencies": {
